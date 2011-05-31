@@ -22,6 +22,7 @@ int daemonize() {
     fgets(pid_str, sizeof pid_str, fp);
     fclose(fp);
     sscanf(pid_str, "%d", &pid);
+    printf("Killing %s", pid_str);
     kill (pid, SIGKILL);
   }
   
@@ -36,6 +37,10 @@ int daemonize() {
   
   // Close parent process in case daemon was spawned successfully.
   if(pid > 0) {
+    exit(EXIT_SUCCESS);
+  }
+  
+  if(pid == 0) {
     fp = fopen("/tmp/daemon.lock", "w");
     
     if(fp == NULL) {
@@ -47,7 +52,6 @@ int daemonize() {
     sprintf(pid_str,"%d",getpid());
     fputs(pid_str, fp);
     fclose(fp);
-    exit(EXIT_SUCCESS);
   }
   
   // We have complete control over the permissions of 
