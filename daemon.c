@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #define PID_MAXLEN 10 
+#define PID_FILE "./daemon.pid"
 
 /*
  * Make a daemon from current process.
@@ -16,13 +17,12 @@ int daemonize() {
   FILE *fp ;
   char pid_str[PID_MAXLEN + 1];
     
-  fp = fopen("/tmp/daemon.lock", "r");
+  fp = fopen(PID_FILE, "r");
 
   if(fp != NULL) {
     fgets(pid_str, sizeof pid_str, fp);
     fclose(fp);
     sscanf(pid_str, "%d", &pid);
-    printf("Killing %s", pid_str);
     kill (pid, SIGKILL);
   }
   
@@ -41,10 +41,9 @@ int daemonize() {
   }
   
   if(pid == 0) {
-    fp = fopen("/tmp/daemon.lock", "w");
-    
+    fp = fopen(PID_FILE, "w");
+    printf("%s", PID_FILE);
     if(fp == NULL) {
-      printf("Cant open pid file!\n");
       fclose(fp);
       exit(EXIT_FAILURE);
     }
