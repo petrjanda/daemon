@@ -40,6 +40,8 @@ int daemonize() {
   }
   
   if(pid == 0) {
+    // After daemon process is spawned its pid is stored in lock file, 
+    // to not allow user spawn multiple instances of the very same daemon.
     fp = fopen(PID_FILE, "w");
     printf("%s", PID_FILE);
     if(fp == NULL) {
@@ -56,13 +58,16 @@ int daemonize() {
   // anything we write. We don't know what umask we may have inherited.
   umask(0);
   
-  // Create fresh session ID.
+  // Obtain new process group to detach from the parent process. The 
+  // daemon then doesn't receive any signals for its starting process then.
   sid = setsid();
   if (sid < 0) {
     exit(EXIT_FAILURE);
   }
   
-  // Change directory to system root.
+  // Because daemons should adopt a current directory which is not located on 
+  // a mounted ﬁle system (assuming that the daemon’s purpose allows this). 
+  // The root ﬁle system, "/", is the most reliable choice.
   if ((chdir("/")) < 0) {
     exit(EXIT_FAILURE);
   }
@@ -80,7 +85,7 @@ main(int argc, char **argv)
   int pid = daemonize();
   
   while (1) {
-    /* Do some task here ... */
-    sleep(30); /* wait 30 seconds */
+    // Do some task here ...
+    sleep(30); // wait 30 seconds
   }
 }
