@@ -21,9 +21,8 @@ int daemonize() {
 
   if(fp != NULL) {
     fgets(pid_str, sizeof pid_str, fp);
-    fclose(fp);
     sscanf(pid_str, "%d", &pid);
-    kill (pid, SIGKILL);
+    kill(pid, SIGKILL);
   }
   
   fclose(fp);
