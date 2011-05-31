@@ -1,19 +1,31 @@
 #include <stdio.h>
 
+#include <signal.h> // kill()
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdlib.h>
 
 #define PID_MAXLEN 10 
 
+/*
+ * Make a daemon from current process.
+ */
 int daemonize() {
   pid_t pid, sid;
   FILE *fp ;
   char pid_str[PID_MAXLEN + 1];
     
-  printf("pid file path: %s \n", "/tmp/daemon.lock");
+  fp = fopen("/tmp/daemon.lock", "r");
 
-  //fgets(pid_str, sizeof pid_str, fp);
+  if(fp != NULL) {
+    fgets(pid_str, sizeof pid_str, fp);
+    fclose(fp);
+    sscanf(pid_str, "%d", &pid);
+    kill (pid, SIGKILL);
+  }
+  
+  fclose(fp);
   
   // Spawn new process which will later act as daemon.
   pid = fork();
@@ -26,21 +38,20 @@ int daemonize() {
   if(pid > 0) {
     fp = fopen("/tmp/daemon.lock", "w");
     
-    if(fp == NULL)
-    {
+    if(fp == NULL) {
       printf("Cant open pid file!\n");
+      fclose(fp);
       exit(EXIT_FAILURE);
     }
     
     sprintf(pid_str,"%d",getpid());
-    printf("pid=%s", pid_str);
     fputs(pid_str, fp);
-    
+    fclose(fp);
     exit(EXIT_SUCCESS);
-    
   }
   
-  printf("Daemon pid %s written to lock file", pid_str);
+  // We have complete control over the permissions of 
+  // anything we write. We don't know what umask we may have inherited.
   umask(0);
   
   // Create fresh session ID.
@@ -62,9 +73,12 @@ int daemonize() {
   return getpid();
 }
 
-main()
+main(int argc, char **argv)
 {
   int pid = daemonize();
   
-  printf("=> Process daemonized to %d\n", pid);
+  while (1) {
+    /* Do some task here ... */
+    sleep(30); /* wait 30 seconds */
+  }
 }
